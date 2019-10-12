@@ -2,7 +2,7 @@
 
 import socket, threading, ssl
 
-MAX_BUFFER = 32 * 512
+MAX_BUFFER = 64 * 512
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
@@ -31,7 +31,9 @@ class ClientThread(threading.Thread):
                 except socket.error as err:
                     # If the connection could not be established, exit
                     # Should properly handle the exit with http error code here
-                    print(err)
+                    print webserver
+                    print(err.message)
+                    break
                     
 
                 # Indiscriminately forward bytes
@@ -89,12 +91,12 @@ class ClientThread(threading.Thread):
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('192.168.1.107', 5123))
+    sock.bind(('localhost', 5123))
     sock.listen(5)
 
     while True:
         conn, addr = sock.accept()
-        conn = ssl.wrap_socket(conn, server_side=True)
+        #conn = ssl.wrap_socket(conn, server_side=True)
         newthread = ClientThread(addr, conn)
         newthread.start()
 
