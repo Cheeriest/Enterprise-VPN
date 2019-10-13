@@ -20,41 +20,49 @@ class ClientThread(threading.Thread):
             webserver, port = self.get_domain_port(request)
             if 'CONNECT' in request:
             # Connect to port 443
-                
+                print request
                 try:
                     # If successful, send 200 code response
                     client.connect(( webserver, port ))
                     reply = "HTTP/1.0 200 Connection established\r\n"
-                    reply += "Proxy-agent: Pyx\r\n"
+                    reply += "Proxy-agent: FIMA\r\n"
                     reply += "\r\n"
                     self.browser.sendall( reply.encode() )
                 except socket.error as err:
                     # If the connection could not be established, exit
                     # Should properly handle the exit with http error code here
-                    print webserver
-                    print(err.message)
                     break
-                    
 
+                
+                """
+                self.ssl_browser = ssl.wrap_socket(self.browser, \
+                                server_side=True, \
+                                certfile='certificate.pem' ,\
+                                keyfile='key.pem',\
+                                do_handshake_on_connect = False)    
+                
+                self.ssl_browser.do_handshake()
+                """
+                self.ssl_browser = self.browser
                 # Indiscriminately forward bytes
-                self.browser.setblocking(0)
+                self.ssl_browser.setblocking(0)
                 client.setblocking(0)
                 while True:
                     try:
-                        request = self.browser.recv(MAX_BUFFER)
+                        request = self.ssl_browser.recv(MAX_BUFFER)
                         client.sendall( request )
                         
                     except socket.error as err:
                         pass
                     try:
                         reply = client.recv(MAX_BUFFER)
-                        self.browser.sendall( reply )
+                        self.ssl_browser.sendall( reply )
                     except socket.error as err:
                         pass
 
                 
             
-        print ("Client at ", self.browser , " disconnected...")
+        print ("Client at ", self.ssl_browser , " disconnected...")
 
     def get_domain_port(self, request):
         first_line = request.split('\n')[0]
@@ -91,12 +99,15 @@ class ClientThread(threading.Thread):
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('localhost', 5123))
+    #sock = ssl.wrap_socket(sock, server_side=True, certfile='certificate.pem', keyfile='key.pem', do_handshake_on_connect=False)
+    #sock.do_handshake()
+    sock.bind(('192.168.1.107', 80))
     sock.listen(5)
 
     while True:
         conn, addr = sock.accept()
-        #conn = ssl.wrap_socket(conn, server_side=True)
+        #conn = ssl.wrap_socket(conn, server_side=True, certfile='certificate.pem', keyfile='key.pem')
+        
         newthread = ClientThread(addr, conn)
         newthread.start()
 
