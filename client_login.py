@@ -21,19 +21,14 @@ def login(username, password):
                 print 'Congragulations %s, you are now connected to our service' %username
                 print 'Your connection token is: \r\n %s' %TOKEN
                 print 'Enjoy your use.'
-                client_handle.handle(TOKEN)
+                client_handle.handle(TOKEN, url)
                 break
             else:
                 continue
         except ValueError:
             if 'Could not verify' in req.text:
                 sys.exit('Your credentials are wrong \r\nPlease try again')
-''' 
-get_proxy_url = url + '/vpn'
-req = requests.get(get_proxy_url, headers = {'x-access-token':TOKEN}).json()
-PROXY_IP = req['ip']
-PROXY_PORT = req['port']
-'''
+
 
 if __name__ == '__main__':
     #Parsing the client credentials and passing them to the login function.

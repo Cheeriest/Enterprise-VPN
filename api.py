@@ -41,6 +41,10 @@ def token_required(f):
             data = jwt.decode(token, app.config['SECRET_KEY'])
             print data
             current_user = User.query.filter_by(public_id=data['public_id']).first()
+            
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message' : 'Token is Out of date. Please get a new one'}), 401
+        
         except:
             return jsonify({'message' : 'Token is invalid!'}), 401
 
@@ -157,7 +161,7 @@ def login():
         return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
     if check_password_hash(user.password, auth['password']):
-        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(seconds=10)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(seconds=2)}, app.config['SECRET_KEY'])
 
         return jsonify({'token' : token.decode('UTF-8')})
 
