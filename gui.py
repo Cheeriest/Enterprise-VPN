@@ -108,3 +108,9 @@ class Ui_Main(object):
         self.label_3.setText(_translate("Main", "<html><head/><body><p><span style=\" font-weight:600;\">Server Port:</span></p></body></html>", None))
         self.label_4.setText(_translate("Main", "<html><head/><body><p><span style=\" font-weight:600; font-style:italic;\">STATUS: </span></p></body></html>", None))
 
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()
