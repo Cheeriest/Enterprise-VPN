@@ -1,6 +1,7 @@
 # If we receive a CONNECT request
 
-import socket, threading
+import socket, threading, jwt, json
+from base64 import b64decode
 
 MAX_BUFFER = 64 * 512
 class ClientThread(threading.Thread):
@@ -11,10 +12,12 @@ class ClientThread(threading.Thread):
 
     def run(self): 
         while True:
+            #request = json.loads(self.browser.recv(MAX_BUFFER))
+            #token = request[1]
+            #request = b64decode(request[0])
+            #print request
             request = self.browser.recv(MAX_BUFFER)
             # parse the first line
-            if 'GET' in request:
-                print request
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             webserver, port = self.get_domain_port(request)
 
@@ -44,12 +47,15 @@ class ClientThread(threading.Thread):
                 while True:
                     try:
                         request = self.browser.recv(MAX_BUFFER)
-                        client.sendall( request )
+                        #    token = request[1]
+                        #    request = b64decode(request[0])
+                        client.sendall(request)
                         
                     except socket.error as err:
                         pass
                     try:
                         reply = client.recv(MAX_BUFFER)
+                        #print reply
                         self.browser.sendall( reply )
                     except socket.error as err:
                         pass
@@ -95,13 +101,14 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #Creating the main socket of the proxy.
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('192.168.1.107', 80))
+    sock.bind(('192.168.1.107', 50002))
     sock.listen(5)
 
     while True:
         conn, addr = sock.accept()
         newthread = ClientThread(addr, conn)
         newthread.daemon = True
+        print('new client', addr)
         newthread.start()
 
     sock.shutdown(socket.SHUT_RDWR)
