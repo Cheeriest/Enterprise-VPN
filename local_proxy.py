@@ -42,10 +42,7 @@ class ClientThread(Thread):
                 self.client_socket.sendall(data)
             except:
                 pass
-
-                
     
-
 
 def main(token):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
