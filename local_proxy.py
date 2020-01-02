@@ -1,4 +1,4 @@
-import socket, json, sys, select
+import socket, json, sys, select, ssl
 from threading import Thread
 from base64 import b64encode
 
@@ -15,25 +15,31 @@ class ClientThread(Thread):
         self.token = token
         
     def run(self):
-        
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket = ssl.wrap_socket(s, ca_certs="cert.pem", cert_reqs=ssl.CERT_REQUIRED)
         try:
             self.server_socket.connect((VPN_IP, VPN_PORT))
         except:
             sys.exit('error')
+        
             
         data = self.client_socket.recv(MAX_BUFFER)
-        self.server_socket.sendall(data)
+        encoded_data = json.dumps([b64encode(data), self.token])
+        self.server_socket.send(encoded_data)
         data = self.server_socket.recv(MAX_BUFFER)
         self.client_socket.sendall(data)
-        
+        self.post_sync()
+    
+    
+    def post_sync(self):    
         self.client_socket.setblocking(0)
         self.server_socket.setblocking(0)
         
         while 1:
             try:
                 data = self.client_socket.recv(MAX_BUFFER)
-                self.server_socket.sendall(data)
+                encoded_data = json.dumps([b64encode(data), self.token])
+                self.server_socket.send(encoded_data)
             except:
                 pass
 
@@ -56,4 +62,4 @@ def main(token):
         newthread.daemon = True
         newthread.start()
         
-main('1')
+#main('1')

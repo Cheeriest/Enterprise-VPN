@@ -19,15 +19,15 @@ def login(username, password):
             if json.loads(req.text)['token']:
                 TOKEN = json.loads(req.text)['token']
                 print 'Congragulations %s, you are now connected to our service' %username
-                print 'Your connection token is: \r\n %s' %TOKEN
                 print 'Enjoy your use.'
-                client_handle.handle(TOKEN, url)
                 break
             else:
                 continue
         except ValueError:
             if 'Could not verify' in req.text:
                 sys.exit('Your credentials are wrong \r\nPlease try again')
+                
+    client_handle.handle(TOKEN, url)
 
 
 if __name__ == '__main__':

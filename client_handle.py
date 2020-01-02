@@ -1,5 +1,6 @@
 import requests, sys
-from registry_manipulation import connect, disconnect
+import local_proxy
+import registry_utils
 
 def handle(jwt_token, auth_url):
     if __name__ != 'client_handle':
@@ -21,5 +22,7 @@ def connect_proxy(jwt_token, auth_url):
     req = requests.get(get_proxy_url, headers = {'x-access-token':jwt_token}).json()
     PROXY_IP = req['ip']
     PROXY_PORT = req['port']
+    registry_utils.connect(PROXY_IP, PROXY_PORT)
+    
     
     

@@ -1,6 +1,6 @@
 # If we receive a CONNECT request
 
-import socket, threading, jwt, json
+import socket, threading, jwt, json, ssl
 from base64 import b64decode
 
 MAX_BUFFER = 64 * 512
@@ -16,7 +16,9 @@ class ClientThread(threading.Thread):
             #token = request[1]
             #request = b64decode(request[0])
             #print request
-            request = self.browser.recv(MAX_BUFFER)
+            data = json.loads(self.browser.recv(MAX_BUFFER))
+            request = b64decode(data[0])
+            token = data[1]
             # parse the first line
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             webserver, port = self.get_domain_port(request)
@@ -46,7 +48,9 @@ class ClientThread(threading.Thread):
                 client.setblocking(0)
                 while True:
                     try:
-                        request = self.browser.recv(MAX_BUFFER)
+                        data = json.loads(self.browser.recv(MAX_BUFFER))
+                        request = b64decode(data[0])
+                        token = data[1]
                         #    token = request[1]
                         #    request = b64decode(request[0])
                         client.sendall(request)
@@ -106,6 +110,10 @@ def main():
 
     while True:
         conn, addr = sock.accept()
+        conn = ssl.wrap_socket(conn,
+                                server_side=True,
+                                certfile="cert.pem",
+                                keyfile="cert.pem")
         newthread = ClientThread(addr, conn)
         newthread.daemon = True
         print('new client', addr)
