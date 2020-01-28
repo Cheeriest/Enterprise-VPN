@@ -31,6 +31,7 @@ class ClientThread(Thread):
         self.post_sync()
     
     
+    
     def post_sync(self):    
         self.client_socket.setblocking(0)
         self.server_socket.setblocking(0)
