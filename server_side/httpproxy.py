@@ -36,7 +36,7 @@ class ClientThread(threading.Thread):
                         self.browser.sendall( reply.encode() )
                     except socket.error as err:
                         raise err
-                        # If the connection could not be established, exit
+                        # If the connection could not be established, exitex
                         # Should properly handle the exit with http error code here
                         break
                 else:
