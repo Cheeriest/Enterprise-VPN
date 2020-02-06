@@ -9,18 +9,20 @@ VPN_IP = '192.168.1.107'
 VPN_PORT = 50002
 
 class ClientThread(Thread):
-    def __init__(self, addr, conn, token):
+    def __init__(self, addr, conn, token, vpn_ip, vpn_port):
         Thread.__init__(self)
         self.client_socket = conn
         self.token = token
+        self.vpn_ip = vpn_ip
+        self.vpn_port = vpn_port
         
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket = ssl.wrap_socket(s, ca_certs="cert.pem", cert_reqs=ssl.CERT_REQUIRED)
         try:
-            self.server_socket.connect((VPN_IP, VPN_PORT))
+            self.server_socket.connect((self.vpn_ip, self.vpn_port))
         except:
-            sys.exit('error')
+            sys.exit('Error on connecting to the vpn server')
         
             
         data = self.client_socket.recv(MAX_BUFFER)
@@ -51,15 +53,16 @@ class ClientThread(Thread):
                 pass
     
 
-def main(token):
+def main(token, vpn_ip, vpn_port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #Creating the main socket of the proxy.
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('192.168.1.107', 50001))
+    sock.bind(('localhost', 8080))
+    print 'listening on local callback proxy on %s %d' %('localhost', 8080)
     sock.listen(1)
     while True:
         conn, addr = sock.accept()
-        newthread = ClientThread(addr, conn, token)
+        newthread = ClientThread(addr, conn, token, vpn_ip, vpn_port)
         newthread.daemon = True
         newthread.start()
         

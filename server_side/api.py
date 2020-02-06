@@ -14,7 +14,7 @@ app.config['SECRET_KEY'] = 'thisissecret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(current_dir, 'database.db')
 db = SQLAlchemy(app)
 app.config['PROXY_IP'] = '192.168.1.107'
-app.config['PROXY_PORT'] = 80
+app.config['PROXY_PORT'] = 50002
 
 
 
@@ -143,7 +143,8 @@ def delete_user(current_user, public_id):
 
 @app.route('/vpn', methods = ['GET'])
 @token_required
-def get_proxy(create_user):
+def get_proxy(current_user):
+    print current_user
     return jsonify({'ip': app.config['PROXY_IP'], 'port': app.config['PROXY_PORT']})
 
 @app.route('/login', methods= ['POST', 'GET'])
@@ -161,13 +162,15 @@ def login():
         return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
     if check_password_hash(user.password, auth['password']):
-        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(seconds=2)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, app.config['SECRET_KEY'])
 
         return jsonify({'token' : token.decode('UTF-8')})
 
     return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
     
-    
+def main():
+    app.run(debug=True)# ssl_context = ('cert.pem', ))    
 
 if __name__ == '__main__':
-    app.run(debug=True)# ssl_context = ('cert.pem', ))
+    main()
+    

@@ -26,8 +26,14 @@ def login(username, password):
         except ValueError:
             if 'Could not verify' in req.text:
                 sys.exit('Your credentials are wrong \r\nPlease try again')
-                
-    client_handle.handle(TOKEN, url)
+    try:
+        client_handle.handle(TOKEN, url)
+    except KeyboardInterrupt:
+        autoproxy.off()
+        try:
+            sys.exit(0)
+        except:
+            os._exit(0)
 
 
 if __name__ == '__main__':
@@ -37,3 +43,4 @@ if __name__ == '__main__':
     parser.add_argument('-p', dest = 'password',  required = True, help='Insert Client Pass')
     args = parser.parse_args()
     login(args.username, args.password)
+

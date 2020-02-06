@@ -5,9 +5,7 @@ import ctypes
 import os
 import sys
 
-WIN_PROXY = u'10.138.15.10:8080'
-MERCURIAL_PROXY = u'http://87.254.212.121:8080'
-ENV_HTTP_PROXY = MERCURIAL_PROXY
+
 
 
 class Registry(object):
@@ -47,8 +45,8 @@ class WindowsProxy(Registry):
         super(WindowsProxy, self).__init__(winreg.HKEY_CURRENT_USER,
                                            r'Software\Microsoft\Windows\CurrentVersion\Internet Settings')
         self.internet_set_option = ctypes.windll.Wininet.InternetSetOptionW
-
-    def on(self):
+        
+    def on(self, WIN_PROXY):
         self.set_key('ProxyEnable', 1)
         self.set_key('ProxyOverride', u'*.local;<local>')  # Bypass the proxy for localhost
         self.set_key('ProxyServer', WIN_PROXY)
@@ -68,11 +66,10 @@ class WindowsProxy(Registry):
 class MercurialProxy(object):
     def __init__(self):
         self.mercurial_ini = os.path.join(os.path.expanduser('~'), 'Mercurial.ini')
-
         self.config = ConfigParser.ConfigParser()
         self.config.read(self.mercurial_ini)
-
-    def on(self):
+        
+    def on(self, MERCURIAL_PROXY):
         try:
             self.config.add_section('http_proxy')
         except ConfigParser.DuplicateSectionError:
@@ -101,8 +98,8 @@ class EnvironmentVariables(Registry):
     def __init__(self):
         super(EnvironmentVariables, self).__init__(winreg.HKEY_LOCAL_MACHINE,
                                                    r'SYSTEM\CurrentControlSet\Control\Session Manager\Environment')
-
-    def on(self):
+        
+    def on(self, ENV_HTTP_PROXY):
         self.set_key('HTTP_PROXY', ENV_HTTP_PROXY)
         self.refresh()
 
@@ -124,14 +121,14 @@ class EnvironmentVariables(Registry):
         SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, u'Environment', SMTO_ABORTIFHUNG, 5000, ctypes.byref(result));
 
 
-def on():
+def on(proxy_addr):
     print 'Proxy enabled'
-    WindowsProxy().on()
-    MercurialProxy().on()
-    EnvironmentVariables().on()
+    WindowsProxy().on(proxy_addr)
+    MercurialProxy().on(proxy_addr)
+    EnvironmentVariables().on(proxy_addr)
 
 
-def off():
+def off(proxy_addr):
     print 'Proxy disabled'
     WindowsProxy().off()
     MercurialProxy().off()
@@ -143,11 +140,15 @@ def exit_error(error):
     exit(1)
 
 
-def main():
+def main(func, proxy_addr):
+    """
     if len(sys.argv) != 2:
         exit_error('usage: ' + sys.argv[0] + ' [on|off]')
-    {"on": on, "off": off}[sys.argv[1]]()
+    """
+    proxy_addr = unicode(proxy_addr)
+    
+    {"on": on, "off": off}[func](proxy_addr)
 
 
 if __name__ == "__main__":
-    main()
+    off('localhost:10')

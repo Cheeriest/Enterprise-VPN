@@ -19,6 +19,7 @@ class ClientThread(threading.Thread):
             data = json.loads(self.browser.recv(MAX_BUFFER))
             request = b64decode(data[0])
             token = data[1]
+            
             # parse the first line
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             webserver, port = self.get_domain_port(request)
