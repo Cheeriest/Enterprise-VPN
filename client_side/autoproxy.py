@@ -122,17 +122,17 @@ class EnvironmentVariables(Registry):
 
 
 def on(proxy_addr):
-    print 'Proxy enabled'
     WindowsProxy().on(proxy_addr)
     MercurialProxy().on(proxy_addr)
     EnvironmentVariables().on(proxy_addr)
+    print 'Proxy enabled'
 
 
-def off(proxy_addr):
-    print 'Proxy disabled'
+def off():
     WindowsProxy().off()
     MercurialProxy().off()
     EnvironmentVariables().off()
+    print 'Proxy disabled'
 
 
 def exit_error(error):
@@ -151,4 +151,4 @@ def main(func, proxy_addr):
 
 
 if __name__ == "__main__":
-    off('localhost:10')
+    off()

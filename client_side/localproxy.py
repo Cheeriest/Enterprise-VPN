@@ -53,17 +53,20 @@ class ClientThread(Thread):
                 pass
     
 
-def main(token, vpn_ip, vpn_port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #Creating the main socket of the proxy.
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('localhost', 8080))
-    print 'listening on local callback proxy on %s %d' %('localhost', 8080)
-    sock.listen(1)
-    while True:
-        conn, addr = sock.accept()
-        newthread = ClientThread(addr, conn, token, vpn_ip, vpn_port)
-        newthread.daemon = True
-        newthread.start()
+def main(token, vpn_ip, vpn_port, self_ip, self_port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #Creating the main socket of the proxy.
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((self_ip, self_port))
+        print 'listening on local callback proxy on %s %d' %(self_ip, self_port)
+        sock.listen(1)
+        while True:
+            conn, addr = sock.accept()
+            newthread = ClientThread(addr, conn, token, vpn_ip, vpn_port)
+            newthread.daemon = True
+            newthread.start()
+    except IOError: 
+        sys.exit(0)
         
 #main('1')
