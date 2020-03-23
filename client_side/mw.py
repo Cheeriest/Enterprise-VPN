@@ -12,6 +12,9 @@ import requests, sys, time
 import localproxy
 import autoproxy
 from threading import Thread
+from ftpclient import *
+
+
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -46,7 +49,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(500, 450)
         MainWindow.setWindowTitle(_fromUtf8("Fima VPN - Abstract Security "))
         MainWindow.setLayoutDirection(QtCore.Qt.LeftToRight)
-        MainWindow.setStyleSheet(_fromUtf8("background-image: url(mainbg.jpg);"))
+        MainWindow.setStyleSheet(_fromUtf8("""background-image: url(mainbg.jpg);"""))
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.vpnButton = QtGui.QPushButton(self.centralwidget)
@@ -125,6 +128,7 @@ class Ui_MainWindow(object):
         self.ftpButton.setCheckable(False)
         self.ftpButton.setAutoDefault(False)
         self.ftpButton.setObjectName(_fromUtf8("ftpButton"))
+        self.ftpButton.clicked.connect(lambda: self.handle_ftp())
         self.label = QtGui.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(0, 400, 591, 31))
         self.label.setStyleSheet(_fromUtf8("background-color:#A3C1DA;\n"
@@ -174,6 +178,11 @@ class Ui_MainWindow(object):
         self.actionFTP_Settings.setText(_translate("MainWindow", "FTP Settings", None))
         self.actionDMZ_Settings.setText(_translate("MainWindow", "DMZ Settings", None))
         self.actionUse_Information.setText(_translate("MainWindow", "Use Information", None))
+
+    def handle_ftp(self):
+        Ftp = FtpWindow()
+        Ftp.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        Ftp.exec_()
 
     def handle_vpn(self, MainWindow):
         if not self.vpn_on:

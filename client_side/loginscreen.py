@@ -5,10 +5,13 @@
 # Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
-
+import sip
+sip.setapi('QString', 2)
 from PyQt4 import QtCore, QtGui
 import requests, json, sys
 from mw import Ui_MainWindow
+
+
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -37,7 +40,7 @@ class Ui_Dialog(object):
         Dialog.setMinimumSize(QtCore.QSize(400, 480))
         Dialog.setMaximumSize(QtCore.QSize(400, 480))
         Dialog.setAutoFillBackground(True)
-        Dialog.setStyleSheet(_fromUtf8("background-image: url(mainbg.jpg);"))
+        Dialog.setStyleSheet(_fromUtf8("""background-image: url(mainbg.jpg);"""))
         self.user_label = QtGui.QLabel(Dialog)
         self.user_label.setGeometry(QtCore.QRect(170, 110, 61, 41))
         self.user_label.setCursor(QtGui.QCursor(QtCore.Qt.UpArrowCursor))
