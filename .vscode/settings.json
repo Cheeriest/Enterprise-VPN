@@ -3,5 +3,6 @@
     "python.linting.pylintEnabled": true,
     "files.exclude": {
         "**/*.pyc": true
-    }
+    },
+    "python.pythonPath": "E:\\Python 2.7.9\\python.exe"
 }

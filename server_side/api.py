@@ -26,6 +26,14 @@ class User(db.Model):
     password = db.Column(db.String(80))
     admin = db.Column(db.Boolean)
 
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(50))
+    report_type = db.Column(db.String(50))
+    report_data = db.Column(db.String(100))
+    
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -51,6 +59,32 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorated
+
+@app.route('/log', methods=['GET', 'POST'])
+@token_required
+def print_vpn_traffic(current_user):
+    if not current_user.admin:
+        return jsonify({'message' : 'Cannot perform that function!'})
+    
+    if request.method == 'POST':
+        data = request.get_json()
+        new_report = Report(public_id=str(uuid.uuid4()), name=data['name'], report_type=data['report_type'], report_data=data['report_data'])
+        db.session.add(new_report)
+        db.session.commit()
+        return jsonify({'message' : 'New Report Added!'})
+        
+    elif request.method == 'GET':
+        reports = Report.query.all()
+        output = []
+        for report in reports:
+            report_dict = {}
+            report_dict['public_id'] = report.public_id
+            report_dict['name'] = report.name
+            report_dict['report_type'] = report.report_type
+            report_dict['report_data'] = report.report_data
+            output.append(report_dict)
+        
+        return jsonify({'reports' : output})
 
 @app.route('/user', methods=['GET'])
 @token_required
@@ -147,6 +181,19 @@ def get_proxy(current_user):
     print current_user
     return jsonify({'ip': app.config['PROXY_IP'], 'port': app.config['PROXY_PORT']})
 
+@app.route('/check_token', methods = ['POST'])
+def check_token():
+    token = request.get_json().get('token')
+    try: 
+        data = jwt.decode(token, app.config['SECRET_KEY'])
+        return jsonify({'Valid' : 'True'}), 200
+        
+    except jwt.ExpiredSignatureError:
+        return jsonify({'Valid' : 'False'}), 200
+
+    except:
+        return jsonify({'Valid' : 'False'}), 200
+
 @app.route('/login', methods= ['POST', 'GET'])
 def login():
     
@@ -162,7 +209,7 @@ def login():
         return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
     if check_password_hash(user.password, auth['password']):
-        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.now() + datetime.timedelta(hours=1)}, app.config['SECRET_KEY'])
 
         return jsonify({'token' : token.decode('UTF-8')})
 

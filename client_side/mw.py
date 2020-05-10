@@ -89,12 +89,12 @@ class Ui_MainWindow(object):
         self.dmzButton.setCheckable(False)
         self.dmzButton.setAutoDefault(False)
         self.dmzButton.setObjectName(_fromUtf8("dmzButton"))
-        self.comingSoonButton = QtGui.QPushButton(self.centralwidget)
-        self.comingSoonButton.setGeometry(QtCore.QRect(290, 230, 161, 131))
-        self.comingSoonButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.comingSoonButton.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.comingSoonButton.setAutoFillBackground(False)
-        self.comingSoonButton.setStyleSheet(_fromUtf8("border-style: outset;\n"
+        self.printButton = QtGui.QPushButton(self.centralwidget)
+        self.printButton.setGeometry(QtCore.QRect(290, 230, 161, 131))
+        self.printButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.printButton.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.printButton.setAutoFillBackground(False)
+        self.printButton.setStyleSheet(_fromUtf8("border-style: outset;\n"
 "border-width: 2px;\n"
 "border-radius: 15px;\n"
 "border-color: black;\n"
@@ -103,12 +103,12 @@ class Ui_MainWindow(object):
 "background-color: #A3C1DA; \n"
 "color: yellow;\n"
 ""))
-        self.comingSoonButton.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
-        self.comingSoonButton.setText(_fromUtf8("Coming soon"))
-        self.comingSoonButton.setCheckable(False)
-        self.comingSoonButton.setAutoDefault(False)
-        self.comingSoonButton.setObjectName(_fromUtf8("comingSoonButton"))
-        self.comingSoonButton.setEnabled(False)
+        self.printButton.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
+        self.printButton.setText(_fromUtf8("Admin Log"))
+        self.printButton.setCheckable(False)
+        self.printButton.setAutoDefault(False)
+        self.printButton.setObjectName(_fromUtf8("printButton"))
+        self.printButton.setEnabled(False)
         self.ftpButton = QtGui.QPushButton(self.centralwidget)
         self.ftpButton.setGeometry(QtCore.QRect(60, 230, 161, 131))
         self.ftpButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -140,7 +140,7 @@ class Ui_MainWindow(object):
         self.dmzButton.raise_()
         self.vpnButton.raise_()
         self.ftpButton.raise_()
-        self.comingSoonButton.raise_()
+        self.printButton.raise_()
         self.label.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
@@ -180,6 +180,7 @@ class Ui_MainWindow(object):
         self.actionUse_Information.setText(_translate("MainWindow", "Use Information", None))
 
     def handle_ftp(self):
+        self.label.setText('Current Information: Launching FTP Application')
         Ftp = FtpWindow()
         Ftp.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         Ftp.exec_()
@@ -187,7 +188,8 @@ class Ui_MainWindow(object):
     def handle_vpn(self, MainWindow):
         if not self.vpn_on:
             get_vpn_url = self.auth_url + '/vpn'
-            req = requests.get(get_vpn_url, headers = {'x-access-token':self.jwt_token}).json()
+            proxies = {'http' : ''}
+            req = requests.get(get_vpn_url, headers = {'x-access-token':self.jwt_token}, proxies = proxies).json()
             VPN_IP = req['ip']
             VPN_PORT = req['port']
             print self.local_proxy_ip + ":"+ str(self.local_proxy_port)

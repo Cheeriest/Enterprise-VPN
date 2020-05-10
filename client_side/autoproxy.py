@@ -6,8 +6,6 @@ import os
 import sys
 
 
-
-
 class Registry(object):
     def __init__(self, key_location, key_path):
         self.reg_key = winreg.OpenKey(key_location, key_path, 0, winreg.KEY_ALL_ACCESS)
@@ -122,16 +120,22 @@ class EnvironmentVariables(Registry):
 
 
 def on(proxy_addr):
-    WindowsProxy().on(proxy_addr)
-    MercurialProxy().on(proxy_addr)
-    EnvironmentVariables().on(proxy_addr)
+    windows_proxy = WindowsProxy()
+    mercurial_proxy = MercurialProxy()
+    enviromental_variables = EnvironmentVariables()
+    windows_proxy.on(proxy_addr)
+    mercurial_proxy.on(proxy_addr)
+    enviromental_variables.on(proxy_addr)
     print 'Proxy enabled'
 
 
 def off():
-    WindowsProxy().off()
-    MercurialProxy().off()
-    EnvironmentVariables().off()
+    windows_proxy = WindowsProxy()
+    mercurial_proxy = MercurialProxy()
+    enviromental_variables = EnvironmentVariables()
+    windows_proxy.off()
+    mercurial_proxy.off()
+    enviromental_variables.off()
     print 'Proxy disabled'
 
 

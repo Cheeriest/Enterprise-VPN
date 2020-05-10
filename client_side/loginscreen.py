@@ -42,6 +42,7 @@ class Ui_Dialog(object):
         Dialog.setAutoFillBackground(True)
         Dialog.setStyleSheet(_fromUtf8("""background-image: url(mainbg.jpg);"""))
         self.user_label = QtGui.QLabel(Dialog)
+        self.user_label.setStyleSheet(_fromUtf8("background:transparent"))
         self.user_label.setGeometry(QtCore.QRect(170, 110, 61, 41))
         self.user_label.setCursor(QtGui.QCursor(QtCore.Qt.UpArrowCursor))
         self.user_label.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
@@ -73,6 +74,7 @@ class Ui_Dialog(object):
         self.user_label_2.setCursor(QtGui.QCursor(QtCore.Qt.UpArrowCursor))
         self.user_label_2.setLocale(QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates))
         self.user_label_2.setObjectName(_fromUtf8("user_label_2"))
+        self.user_label_2.setStyleSheet(_fromUtf8("background:transparent"))
         self.login_button = QtGui.QPushButton(Dialog)
         self.login_button.clicked.connect(lambda : self.login_callback(Dialog))
         self.login_button.setGeometry(QtCore.QRect(80, 310, 241, 41))
@@ -115,14 +117,17 @@ class Ui_Dialog(object):
         username = str(self.user_textedit_3.toPlainText())
         password = str(self.user_textedit_2.toPlainText()) 
         print username, password
-        data_json = { 'name':username, 'password':password }
+        print requests.utils.get_environ_proxies(login_url)
+        data_json = { 'name': username, 'password': password }
         headers = { 'Content-type': 'application/json' }
+        proxies = {'http' : ''}
         try:
-            req = requests.post(login_url, json=data_json, headers=headers)
+            req = requests.post(login_url, json=data_json, headers=headers, proxies = proxies)
             if json.loads(req.text).get('token'):
                 self.TOKEN = json.loads(req.text)['token']
                 Dialog.accept()
         except requests.exceptions.ConnectionError:
+            raise
             return
         except ValueError:
             print 'Wrong Credentials'
