@@ -7,7 +7,7 @@ from time import sleep, time
 
 
 
-MAX_BUFFER = 512 * 75
+MAX_BUFFER = 512 * 15
 VPN_IP = '192.168.1.107'
 VPN_PORT = 50002
 
@@ -57,7 +57,7 @@ class ClientThread(Thread):
                 self.client_socket.sendall(data)
             except:
                 pass
-            sleep(0.01)
+            sleep(0.05)
         
     
             
@@ -85,7 +85,6 @@ class ClientThread(Thread):
                 else:
                     return ''
             buf += buf2
-        print 'got ', len(buf)
         return buf
 
     def _send_block(self, s, data):

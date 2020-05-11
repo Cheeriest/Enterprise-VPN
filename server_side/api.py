@@ -20,6 +20,7 @@ app.config['PROXY_PORT'] = 50002
 
 
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     public_id = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(50))
@@ -27,9 +28,9 @@ class User(db.Model):
     admin = db.Column(db.Boolean)
 
 class Report(db.Model):
+    __tablename__ = 'report'
     id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.String(50), unique=True)
-    name = db.Column(db.String(50))
+    public_id = db.Column(db.String(50))
     report_type = db.Column(db.String(50))
     report_data = db.Column(db.String(100))
     
@@ -60,18 +61,19 @@ def token_required(f):
 
     return decorated
 
-@app.route('/log', methods=['GET', 'POST'])
+@app.route('/logs', methods=['GET', 'POST'])
 @token_required
 def print_vpn_traffic(current_user):
     if not current_user.admin:
         return jsonify({'message' : 'Cannot perform that function!'})
     
     if request.method == 'POST':
-        data = request.get_json()
-        new_report = Report(public_id=str(uuid.uuid4()), name=data['name'], report_type=data['report_type'], report_data=data['report_data'])
-        db.session.add(new_report)
-        db.session.commit()
-        return jsonify({'message' : 'New Report Added!'})
+        reports = request.get_json().get('reports')
+        for data in reports:
+            new_report = Report(public_id=data['public_id'],  report_type=data['report_type'], report_data=data['report_data'])
+            db.session.add(new_report)
+            db.session.commit()
+        return jsonify({'message' : 'New Reports Added!'})
         
     elif request.method == 'GET':
         reports = Report.query.all()
@@ -79,7 +81,6 @@ def print_vpn_traffic(current_user):
         for report in reports:
             report_dict = {}
             report_dict['public_id'] = report.public_id
-            report_dict['name'] = report.name
             report_dict['report_type'] = report.report_type
             report_dict['report_data'] = report.report_data
             output.append(report_dict)
@@ -106,6 +107,7 @@ def get_all_users(current_user):
 
     return jsonify({'users' : output})
 
+
 @app.route('/user/<public_id>', methods=['GET'])
 @token_required
 def get_one_user(current_user, public_id):
@@ -126,20 +128,15 @@ def get_one_user(current_user, public_id):
 
     return jsonify({'user' : user_data})
 
-@app.route('/user', methods=['POST'])
-@token_required
-def create_user(current_user=None):
-    if not current_user.admin:
-        return jsonify({'message' : 'Cannot perform that function!'})
 
+@app.route('/register', methods=['POST'])
+def register():
     data = request.get_json()
-
     hashed_password = generate_password_hash(data['password'], method='sha256')
-
     new_user = User(public_id=str(uuid.uuid4()), name=data['name'], password=hashed_password, admin=False)
     db.session.add(new_user)
     db.session.commit()
-
+    
     return jsonify({'message' : 'New user created!'})
 
 @app.route('/user/<public_id>', methods=['PUT'])

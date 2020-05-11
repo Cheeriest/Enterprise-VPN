@@ -7,13 +7,15 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 from random import randint
 import requests, sys, time
 import localproxy
 import autoproxy
 from threading import Thread
 from ftpclient import *
-
+import os
 
 
 try:
@@ -108,7 +110,8 @@ class Ui_MainWindow(object):
         self.printButton.setCheckable(False)
         self.printButton.setAutoDefault(False)
         self.printButton.setObjectName(_fromUtf8("printButton"))
-        self.printButton.setEnabled(False)
+        self.printButton.setEnabled(True)
+        self.printButton.clicked.connect(lambda: self.display_log())
         self.ftpButton = QtGui.QPushButton(self.centralwidget)
         self.ftpButton.setGeometry(QtCore.QRect(60, 230, 161, 131))
         self.ftpButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
@@ -185,6 +188,11 @@ class Ui_MainWindow(object):
         Ftp.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         Ftp.exec_()
 
+    def display_log(self):
+        table = Logger(self.jwt_token)
+        table.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        table.exec_()
+    
     def handle_vpn(self, MainWindow):
         if not self.vpn_on:
             get_vpn_url = self.auth_url + '/vpn'
@@ -200,25 +208,70 @@ class Ui_MainWindow(object):
             self.local_proxy_thread.start()
             self.label.setText('Current Information: Enabled local proxy traffic')
             self.vpnButton.setStyleSheet(_fromUtf8("border-style: outset;\n"
-    "border-width: 2px;\n"
-    "border-radius: 15px;\n"
-    "border-color: black;\n"
-    "padding: 4px;\n"
-    "font-size:25px;\n"
-    "background-color: #A3C1DA; \n"
-    "color: green;"))
+            "border-width: 2px;\n"
+            "border-radius: 15px;\n"
+            "border-color: black;\n"
+            "padding: 4px;\n"
+            "font-size:25px;\n"
+            "background-color: #A3C1DA; \n"
+            "color: green;"))
             self.vpnButton.setText('VPN: ON')
             self.vpn_on = True
         else:
             autoproxy.off()
             self.vpnButton.setStyleSheet(_fromUtf8("border-style: outset;\n"
-    "border-width: 2px;\n"
-    "border-radius: 15px;\n"
-    "border-color: black;\n"
-    "padding: 4px;\n"
-    "font-size:25px;\n"
-    "background-color: #A3C1DA; \n"
-    "color: red;"))
+            "border-width: 2px;\n"
+            "border-radius: 15px;\n"
+            "border-color: black;\n"
+            "padding: 4px;\n"
+            "font-size:25px;\n"
+            "background-color: #A3C1DA; \n"
+            "color: red;"))
             self.vpnButton.setText('VPN: OFF')
             self.label.setText('Current Information: Disabled local proxy traffic')
             self.vpn_on = False
+            
+            
+class Logger(QtGui.QDialog):
+    def __init__(self, jwt_token, *args):
+        super(Logger, self).__init__(*args)
+        self.AUTH_IP = 'localhost'
+        self.AUTH_PORT = 5000
+        self.auth_url = 'http://' + self.AUTH_IP + ':' + str(self.AUTH_PORT)
+        self.token = jwt_token
+        self.loglist = QtGui.QTreeWidget()
+        self.loglist.setEnabled(True)
+        self.loglist.setHeaderLabels(("Public ID", "Type", "Data"))
+        self.loglist.header().setStretchLastSection(True)
+        self.refreshButton = QtGui.QPushButton("Refresh Logs")
+        self.refreshButton.clicked.connect(lambda: self.refresh_logs())
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton(self.refreshButton, QtGui.QDialogButtonBox.ActionRole)
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addWidget(self.loglist)
+        mainLayout.addWidget(buttonBox)
+        self.setLayout(mainLayout)
+        self.setWindowTitle("Admin Logger")
+        
+    def sizeHint(self):
+        return QtCore.QSize(1000, 500)
+ 
+    def refresh_logs(self):
+        self.loglist.clear()
+        proxies = {'http' : ''}
+        req = requests.get(self.auth_url + '/logs', headers = {'x-access-token':self.token}, proxies = proxies)
+        print req.text
+        req = req.json()
+        reports = req.get('reports')
+        for report in reports:
+            self.add_report_to_list(report)
+    
+    def add_report_to_list(self, report):
+        item = QtGui.QTreeWidgetItem()
+        item.setText(0, report.get('public_id'))
+        item.setText(1, report.get('report_type'))
+        item.setText(2, report.get('report_data'))
+        self.loglist.addTopLevelItem(item)
+        
+    
+        

@@ -2,12 +2,16 @@
 
 import socket, threading, jwt, json, ssl
 from base64 import b64decode, b64encode
-import struct, datetime, requests
+import struct, datetime, requests, time
 
+token_condiotion = threading.Condition()
+reports_conition = threading.Condition()
 cached_tokens = []
+cached_reports = []
+
+api_url = 'http://localhost:5000'
 MAX_BUFFER = 512 * 75
 class ClientThread(threading.Thread):
-    api_url = 'http://localhost:5000'
     def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
         self.browser = clientsocket
@@ -28,7 +32,7 @@ class ClientThread(threading.Thread):
             # parse the first line
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             webserver, port = self.get_domain_port(request)
-
+            self.add_report(webserver, token)
             if 'CONNECT' or 'GET' in request:
             # Connect to port 443
                 if 'CONNECT' in request:
@@ -75,7 +79,6 @@ class ClientThread(threading.Thread):
                         #print reply
                         if reply:
                             self.send_msg(self.browser, b64encode(reply))
-                            print len(b64encode(reply))
                             
                     except socket.error as err:
                         pass
@@ -83,6 +86,7 @@ class ClientThread(threading.Thread):
         print ("Client at ", self.browser , " disconnected...")
 
     def check_token(self, token):
+        global cached_tokens
         tokens = cached_tokens
         if token in tokens:
             #check if the given token is in cache.
@@ -95,6 +99,7 @@ class ClientThread(threading.Thread):
                 if exp_time_obj < now_time:
                     #if the token has expired, then just get 
                     #rid of it.
+                    
                     cached_tokens.remove(token)
                     return False
                 else:
@@ -103,16 +108,15 @@ class ClientThread(threading.Thread):
             #Check the api server if token is valid, if it is
             #just add it to cached tokens for further use.
             
-            req = requests.post(ClientThread.api_url + '/check_token',
+            req = requests.post(api_url + '/check_token',
                                 json = {'token' : token},
                                 headers = {'Content-type': 'application/json'},
                                 proxies = {'http' : ''})
             try:
                 json_response = json.loads(req.text)
             except:
-                print req.text
-                import sys
-                sys.exit(0)
+                return False
+            
             if str(json_response.get('Valid')) == "True":
                 cached_tokens.append(token)
                 return True
@@ -146,6 +150,21 @@ class ClientThread(threading.Thread):
             webserver = temp[:port_pos] 
             
         return webserver, port
+    
+    def add_report(self, website, token):
+        global cached_reports
+        headers = jwt.decode(token, verify = False)
+        public_id = headers.get('public_id')
+        report_type = 'Website Access'
+        report_data = 'Access of %s at %s' % (public_id, website, str(datetime.datetime.now()))
+        reports_conition.acquire()
+        cached_reports.append({
+            'public_id' : public_id,
+            'report_type' : report_type,
+            'report_data' : report_data
+        })
+        reports_conition.notifyAll()
+        reports_conition.release()
     
 
     def get_msg(self, s):
@@ -186,8 +205,34 @@ class ClientThread(threading.Thread):
         self.browser.close()
         return
     
-
+def refresh_reports():
+    username = 'fimka'
+    password = 'fimka' 
+    data_json = { 'name': username, 'password': password }
+    headers = { 'Content-type': 'application/json' }
+    proxies = {'http' : ''}
+    req = requests.post(api_url + '/login', json=data_json, headers=headers, proxies = proxies)
+    token = json.loads(req.text).get('token')
+    global cached_reports
+    while True:
+        reports_conition.acquire()
+        req = requests.post(api_url + '/logs',
+                                json = {'reports' : cached_reports},
+                                headers = {'Content-type': 'application/json',
+                                           'x-access-token': token},
+                                proxies = {'http' : ''})
+        print req.json()
+        reports_conition.release()
+        cached_reports = list()
+        time.sleep(15)
+        
+        
+        
+        
 def main():
+    report_thread = threading.Thread(target = refresh_reports)
+    report_thread.daemon = True
+    report_thread.start()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #Creating the main socket of the proxy.
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

@@ -71,6 +71,7 @@ class MercurialProxy(object):
         try:
             self.config.add_section('http_proxy')
         except ConfigParser.DuplicateSectionError:
+            print 'xd1'
             pass
 
         self.config.set('http_proxy', 'host', MERCURIAL_PROXY)
@@ -80,6 +81,7 @@ class MercurialProxy(object):
         try:
             self.config.remove_section('http_proxy')
         except ConfigParser.NoSectionError:
+            print 'xd2'
             pass
         self.save()
 
@@ -109,8 +111,8 @@ class EnvironmentVariables(Registry):
         HWND_BROADCAST = 0xFFFF
         WM_SETTINGCHANGE = 0x1A
 
-        #SendMessage = ctypes.windll.user32.SendMessageW
-        #SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, u'Environment')
+        SendMessage = ctypes.windll.user32.SendMessageW
+        SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, u'Environment')
 
         SMTO_ABORTIFHUNG = 0x0002
 
@@ -154,5 +156,5 @@ def main(func, proxy_addr):
     {"on": on, "off": off}[func](proxy_addr)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" or len(sys.argv) > 1:
     off()

@@ -98,6 +98,7 @@ class Ui_Dialog(object):
 "    min-width: 10em;\n"
 "    padding: 6px;"))
         self.signup_button.setObjectName(_fromUtf8("signup_button"))
+        self.signup_button.clicked.connect(lambda: self.register_callback(Dialog))
         self.retranslateUi(Dialog)
         self.login_button.raise_()
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -111,6 +112,20 @@ class Ui_Dialog(object):
         self.user_label.setText(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:18pt; font-weight:600;\">User</span></p></body></html>", None))
         self.user_label_2.setText(_translate("Dialog", "<html><head/><body><p><span style=\" font-size:18pt; font-weight:600;\">Password</span></p></body></html>", None))
 
+    def register_callback(self, Dialog):
+        url = 'http://' + self.AUTH_IP + ':' + str(self.AUTH_PORT)
+        register_url = url + '/register'
+        username = str(self.user_textedit_3.toPlainText())
+        password = str(self.user_textedit_2.toPlainText()) 
+        data_json = { 'name': username, 'password': password }
+        headers = { 'Content-type': 'application/json' }
+        proxies = {'http' : ''}
+        try:
+            req = requests.post(register_url, json=data_json, headers=headers, proxies = proxies)
+        except requests.exceptions.ConnectionError:
+            return
+    
+    
     def login_callback(self, Dialog):
         url = 'http://' + self.AUTH_IP + ':' + str(self.AUTH_PORT)
         login_url = url + '/login'
