@@ -172,7 +172,8 @@ class FtpWindow(QtGui.QDialog):
             self.ftp.list()
 
         if self.ftp.currentCommand() == QtNetwork.QFtp.Get:
-            if error:
+            if error and not error:
+                print str(error)
                 self.statusLabel.setText("Canceled download of %s." % self.outFile.fileName())
                 self.outFile.close()
                 self.outFile.remove()

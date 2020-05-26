@@ -252,6 +252,9 @@ class Logger(QtGui.QDialog):
         mainLayout.addWidget(buttonBox)
         self.setLayout(mainLayout)
         self.setWindowTitle("Admin Logger")
+        self.timer = QTimer()
+        QtCore.QObject.connect(self.timer, QtCore.SIGNAL("timeout()"), self.refresh_logs)
+        self.timer.start(1000)
         
     def sizeHint(self):
         return QtCore.QSize(1000, 500)

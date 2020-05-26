@@ -11,6 +11,24 @@ cached_reports = []
 
 api_url = 'http://localhost:5000'
 MAX_BUFFER = 512 * 75
+black_list = [
+    'facebook.com',
+    's-static.ak.facebook.com',
+    'static.ak.facebook.com',
+    'graph.facebook.com',
+    'upload.facebook.com',
+    'chat.facebook.com',
+    'apps.facebook.com',
+    'channel.facebook.com',
+    'pixel.facebook.com',
+    'star.facebook.com',
+    'star.c10r.facebook.com',
+    'vupload2.facebook.com',
+    'vupload2.t.facebook.com',
+    'b-api.facebook.com',
+    'fbcdn.net',
+    'fbsbx.com'
+]
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
@@ -32,6 +50,10 @@ class ClientThread(threading.Thread):
             # parse the first line
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             webserver, port = self.get_domain_port(request)
+            if webserver in black_list:
+                self.shutdown_connection()
+                print 'xd'
+                return
             self.add_report(webserver, token)
             if 'CONNECT' or 'GET' in request:
             # Connect to port 443
@@ -156,7 +178,7 @@ class ClientThread(threading.Thread):
         headers = jwt.decode(token, verify = False)
         public_id = headers.get('public_id')
         report_type = 'Website Access'
-        report_data = 'Access of %s at %s' % (public_id, website, str(datetime.datetime.now()))
+        report_data = 'Access of %s at %s' % (website, str(datetime.datetime.now()))
         reports_conition.acquire()
         cached_reports.append({
             'public_id' : public_id,
